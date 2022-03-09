@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.assertj.core.internal.bytebuddy.matcher.ElementMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -61,7 +62,17 @@ public class BookControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[2].name").value("Grokking Algorithms"))
                 .andExpect(jsonPath("$[1].name").value("Thinking Fast and Slow"));
+    }
 
+    @Test
+    public void getBookById() throws Exception{
+        Mockito.when(bookRepository.findById(RECORD_1.getBookId())).thenReturn(java.util.Optional.of(RECORD_1));
 
+        mockMvc.perform(MockMvcRequestBuilders
+                .get("/book/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$.name").value("Atomic Habits"));
     }
 }
