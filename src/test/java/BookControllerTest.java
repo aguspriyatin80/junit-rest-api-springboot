@@ -13,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -20,8 +21,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
-import static org.assertj.core.internal.bytebuddy.matcher.ElementMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -74,5 +75,63 @@ public class BookControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", notNullValue()))
                 .andExpect(jsonPath("$.name").value("Atomic Habits"));
+    }
+
+    @Test
+    public void createRecord_success() throws Exception{
+        Book record = Book.builder()
+                .bookId(4L)
+                .name("Introduction to Java")
+                .summary("Learning java is easy")
+                .rating(5)
+                .build();
+
+        Mockito.when(bookRepository.save(record)).thenReturn(record);
+
+        String content = objectWriter.writeValueAsString(record);
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/book")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(content);
+
+        mockMvc.perform(mockRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$",notNullValue()))
+                .andExpect(jsonPath("$.name").value("Introduction to Java"));
+    }
+    
+    @Test
+    public void updateBookRecord_success() throws Exception {
+        Book updatedRecord = Book.builder()
+                .bookId(1L)
+                .name("Updated book name")
+                .summary("Updated summary")
+                .rating(1)
+                .build();
+
+        Mockito.when(bookRepository.findById(RECORD_1.getBookId())).thenReturn(java.util.Optional.ofNullable(RECORD_1));
+        Mockito.when(bookRepository.save(updatedRecord)).thenReturn(updatedRecord);
+
+        String updatedContent = objectWriter.writeValueAsString(updatedRecord);
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.put("/book")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(updatedContent);
+
+        mockMvc.perform(mockRequest)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$",notNullValue()))
+                .andExpect(jsonPath("$.name").value("Updated book name"));
+    }
+
+    @Test
+    public void deleteBookById_success() throws Exception{
+        Mockito.when(bookRepository.findById(RECORD_2.getBookId())).thenReturn(Optional.of(RECORD_2));
+        mockMvc.perform(MockMvcRequestBuilders
+                .delete("/book/2")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 }

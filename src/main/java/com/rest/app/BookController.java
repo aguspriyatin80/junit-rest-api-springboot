@@ -44,4 +44,11 @@ public class BookController {
         return bookRepository.save(existingBookRecord);
     }
 
+    @DeleteMapping("/{bookId}")
+    public void deleteBookById(@PathVariable("bookId") Long id) throws NotFoundException{
+        if(!bookRepository.findById(id).isPresent()){
+            throw new NotFoundException("ID " + id +  " not found");
+        }
+        bookRepository.deleteById(id);
+    }
 }
